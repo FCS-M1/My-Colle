@@ -10,28 +10,41 @@
   <div class="container mt-5">
     <!-- ステップバー -->
     <div class="mb-4">
-      <h5 id="step-label">ステップ 1 / 3</h5>
+      <h5 id="step-label">ステップ 1 / 4</h5>
       <div class="progress">
-        <div id="progress-bar" class="progress-bar" style="width: 33%;"></div>
+        <div id="progress-bar" class="progress-bar" style="width: 25%;"></div>
       </div>
     </div>
 
-    <!-- ステップ1: 質問入力 -->
+    <!-- ステップ1: 名前入力 -->
     <div id="step1" class="fade-in">
+      <h4>まずはあなたの名前を教えてください</h4>
+      <form id="name-form" autocomplete="off">
+        <input type="text" class="form-control my-3" name="name" id="name-input" placeholder="名前を入力" required>
+        <button class="btn btn-primary">次へ</button>
+      </form>
+    </div>
+
+    <!-- ステップ2: 質問入力 -->
+    <div id="step2" class="hidden fade-in">
       <h4>自己紹介で使いたい質問を入力してください（1つ以上）</h4>
       <form id="initial-question-form" autocomplete="off">
         <div id="question-inputs">
           <input class="form-control my-2" name="question1" required placeholder="質問 1">
         </div>
         <div class="d-flex justify-content-between mt-2">
-          <button type="button" class="btn btn-outline-secondary" id="add-question-btn">＋ 質問を追加</button>
+          <div>
+            <button type="button" class="btn btn-outline-secondary me-2" id="add-question-btn">＋ 質問を追加</button>
+            <button type="button" class="btn btn-outline-primary" id="suggest-question-btn">質問をランダム生成</button>
+          </div>
           <button class="btn btn-primary">次へ</button>
         </div>
       </form>
     </div>
 
-    <!-- ステップ2: 回答入力 -->
-    <div id="step2" class="hidden fade-in">
+
+    <!-- ステップ3: 回答入力 -->
+    <div id="step3" class="hidden fade-in">
       <h4>質問に答えてください</h4>
       <form id="answer-form"></form>
       <div id="slider-section" class="mt-4">
@@ -49,8 +62,8 @@
       <p>追加の質問を生成中...</p>
     </div>
 
-    <!-- ステップ3: 追加質問に答える + スタイル指定 + 生成 -->
-    <div id="step3" class="hidden fade-in">
+    <!-- ステップ4: 追加質問に答える + スタイル指定 + 生成 -->
+    <div id="step4" class="hidden fade-in">
       <h4>さらに深掘りして答えてください</h4>
       <form id="extra-answer-form"></form>
     </div>
@@ -63,7 +76,7 @@
       <p>自己紹介を生成中...</p>
     </div>
 
-    <!-- ステップ4: 結果 -->
+    <!-- 生成結果 -->
     <div id="result" class="hidden fade-in">
       <h4>あなたの自己紹介文</h4>
       <div class="card p-4 my-3 shadow-sm">
@@ -73,62 +86,138 @@
         </div>
       </div>
       <button id="restart-btn" class="btn btn-secondary">最初に戻る</button>
+      <button id="save-btn" class="btn btn-secondary">ローカルに保存</button>
     </div>
   </div>
 
   <script>
-    let questions = [];
-    let answers = [];
-    let questionCount = 1;
-    
-    document.getElementById("add-question-btn").addEventListener("click", () => {
-      questionCount++;
-      const div = document.createElement("div");
-      div.innerHTML = `<input class="form-control my-2" name="question${questionCount}" required placeholder="質問 ${questionCount}">`;
-      document.getElementById("question-inputs").appendChild(div);
+    // ===== グローバル変数 =====
+    const TOTAL_STEPS = 4;      // 1〜4
+    let currentStep = 1;        // いま表示しているステップ
+    let questionCount = 1;      // 質問数
+    let userName = "";          // 名前
+    let questions = [];         // 質問配列
+
+    // ===== DOMContentLoaded =====
+    document.addEventListener("DOMContentLoaded", () => {
+      // 最初は step1 だけ表示
+      toggleOnly("step1");
+      updateProgress(1);
+
+      setupNameForm();
+      setupInitialQuestionForm();
+      setupCopyButton();
+      setupRestartButton();
+      setupSaveButton();
     });
 
-    window.addEventListener("DOMContentLoaded", setupInitialFormSubmit);
+    // ===== ユーティリティ =====
+    function updateProgress(step) {
+      const bar = document.getElementById("progress-bar");
+      const label = document.getElementById("step-label");
+      const percent = (step / TOTAL_STEPS) * 100;
+      bar.style.width = `${percent}%`;
+      label.textContent = `ステップ ${step} / ${TOTAL_STEPS}`;
+      currentStep = step;
+    }
 
-    function setupInitialFormSubmit() {
-      document.getElementById("initial-question-form").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        questions = Array.from(formData.values()).filter(q => q.trim());
-        updateProgress(2);
-
-        const form = document.getElementById("answer-form");
-        form.innerHTML = "";
-        questions.forEach(q => {
-          form.innerHTML += `<label>${q}</label><input name="${q}" class="form-control my-2" required>`;
-        });
-        form.innerHTML += `<button class="btn btn-success mt-3">次へ</button>`;
-
-        toggleSteps("step1", "step2");
+    function toggleOnly(showId) {
+      ["step1", "step2", "step3", "step4", "result"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (id === showId) el.classList.remove("hidden");
+        else el.classList.add("hidden");
       });
     }
 
-    // ステップ2 → ステップ3
-    document.getElementById("answer-form").addEventListener("submit", async (e) => {
+    // ===== ステップ1: 名前入力 =====
+    function setupNameForm() {
+      document.getElementById("name-form").addEventListener("submit", e => {
+        e.preventDefault();
+        userName = document.getElementById("name-input").value.trim();
+        if (!userName) return;
+        updateProgress(2);
+        toggleOnly("step2");
+      });
+    }
+
+    // ===== ステップ2: 質問入力 =====
+    function setupInitialQuestionForm() {
+      const questionInputs = document.getElementById("question-inputs");
+
+      // 質問追加ボタン
+      document.getElementById("add-question-btn").addEventListener("click", () => {
+        questionCount++;
+        const div = document.createElement("div");
+        div.className = "d-flex align-items-center my-2 question-item";
+        div.innerHTML = `
+          <input class="form-control me-2" name="question${questionCount}" required placeholder="質問 ${questionCount}">
+          <button type="button" class="btn btn-outline-danger btn-sm remove-question-btn">✕</button>
+        `;
+        questionInputs.appendChild(div);
+      });
+
+      // AIによる質問提案ボタン
+      document.getElementById("suggest-question-btn").addEventListener("click", generate_question);
+
+
+      // 削除ボタンのイベント（動的追加にも対応）
+      questionInputs.addEventListener("click", (e) => {
+        if (e.target.classList.contains("remove-question-btn")) {
+          e.target.closest(".question-item").remove();
+        }
+      });
+
+      // フォーム送信
+      document.getElementById("initial-question-form").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        questions = Array.from(formData.values()).filter(q => q.trim());
+        buildAnswerForm();
+        updateProgress(3);
+        toggleOnly("step3");
+      });
+    }
+
+
+    // ===== ステップ3: 回答入力 =====
+    function buildAnswerForm() {
+      const form = document.getElementById("answer-form");
+      form.innerHTML = "";
+      questions.forEach(q => {
+        form.innerHTML += `<label>${q}</label><input name="${q}" class="form-control my-2" required>`;
+      });
+      form.innerHTML += `<button class="btn btn-success mt-3">次へ</button>`;
+
+      form.addEventListener("submit", handleAnswerSubmit);
+    }
+
+    async function handleAnswerSubmit(e) {
       e.preventDefault();
-      let answers = {};
+      const answers = {};
       const formData = new FormData(e.target);
       formData.forEach((v, k) => answers[k] = v);
       const extraCount = parseInt(document.getElementById("extra-count").value);
 
       document.getElementById("loading-spinner").classList.remove("d-none");
-
       const res = await fetch("/generate_extra_questions", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ answers, extra_count: extraCount })
       });
       const data = await res.json();
       document.getElementById("loading-spinner").classList.add("d-none");
 
+      buildExtraAnswerForm(data.extra_questions);
+      updateProgress(4);
+      toggleOnly("step4");
+    }
+
+    // ===== ステップ4: 追加回答 & スタイル =====
+    function buildExtraAnswerForm(extraQuestions) {
       const form = document.getElementById("extra-answer-form");
       form.innerHTML = "";
-      data.extra_questions.forEach(q => {
+      extraQuestions.forEach(q => {
         form.innerHTML += `<label>${q}</label><input name="${q}" class="form-control my-2" required>`;
       });
       form.innerHTML += `
@@ -141,84 +230,122 @@
         </div>
       `;
 
-      updateProgress(3);
-      toggleSteps("step2", "step3");
-    });
+      form.addEventListener("submit", handleIntroGenerate);
+    }
 
-    // ステップ3 → 結果
-    document.getElementById("extra-answer-form").addEventListener("submit", async (e) => {
+    async function handleIntroGenerate(e) {
       e.preventDefault();
-    
-      let answers = {};
+      const answers = {};
       const formData = new FormData(e.target);
       formData.forEach((v, k) => answers[k] = v);
       const style = document.getElementById("style-choice").value.trim();
 
       document.getElementById("intro-loading-spinner").classList.remove("d-none");
-
       const res = await fetch("/generate_intro", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ answers, style })
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ answers, style, name: userName })
       });
       const data = await res.json();
       document.getElementById("intro-loading-spinner").classList.add("d-none");
 
-      toggleSteps("step3", "result");
       document.getElementById("intro-text").innerText = data.introduction;
-    });
-
-    // コピー機能
-    document.getElementById("copy-btn").addEventListener("click", () => {
-      const text = document.getElementById("intro-text").innerText;
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById("copy-btn");
-        const original = btn.innerText;
-        btn.innerText = "コピーしました！";
-        btn.disabled = true;
-        setTimeout(() => {
-          btn.innerText = original;
-          btn.disabled = false;
-        }, 1500);
-      }).catch(() => alert("コピーに失敗しました。"));
-    });
-
-    // 最初に戻る
-    document.getElementById("restart-btn").addEventListener("click", () => {
-      questions = [];
-      answers = {};
-      questionCount = 1;
-      document.getElementById("question-inputs").innerHTML = `
-        <input class="form-control my-2" name="question1" required placeholder="質問 1">
-      `;
-      document.getElementById("answer-form").innerHTML = "";
-      document.getElementById("extra-answer-form").innerHTML = "";
-      document.getElementById("intro-text").innerText = "";
-      document.getElementById("loading-spinner").classList.add("d-none");
-      document.getElementById("intro-loading-spinner").classList.add("d-none");
-      updateProgress(1);
-      toggleSteps("result", "step1");
-      setupInitialFormSubmit();
-    });
-
-    function toggleSteps(hideId, showId) {
-      document.getElementById(hideId).classList.add("hidden");
-      document.getElementById(showId).classList.remove("hidden");
+      toggleOnly("result");
     }
 
-    function updateProgress(step) {
-      const bar = document.getElementById("progress-bar");
-      const label = document.getElementById("step-label");
-      const percent = step === 1 ? 33 : step === 2 ? 66 : 100;
-      bar.style.width = `${percent}%`;
-      label.textContent = `ステップ ${step} / 3`;
-    }
+    async function generate_question() {
+      try {
+        const res = await fetch("/suggest_question", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
 
-    document.addEventListener("input", (e) => {
-      if (e.target.id === "extra-count") {
-        document.getElementById("extra-count-value").innerText = e.target.value;
+        if (!res.ok) throw new Error("サーバーエラー");
+
+        const data = await res.json();
+        const suggested = data.question;
+
+        // まず空の欄があるか探す
+        const inputs = document.querySelectorAll("#question-inputs input");
+        let filled = false;
+        for (const input of inputs) {
+          if (!input.value.trim()) {
+            input.value = suggested;
+            filled = true;
+            break;
+          }
+        }
+
+        // 空欄がなかったら新規に欄を追加
+        if (!filled) {
+          questionCount++;
+          const div = document.createElement("div");
+          div.className = "d-flex align-items-center my-2 question-item";
+          div.innerHTML = `
+            <input class="form-control me-2" name="question${questionCount}" required value="${suggested}" placeholder="質問 ${questionCount}">
+            <button type="button" class="btn btn-outline-danger btn-sm remove-question-btn">✕</button>
+          `;
+          document.getElementById("question-inputs").appendChild(div);
+        }
+
+      } catch (err) {
+        alert("質問の提案に失敗しました: " + err.message);
       }
-    });
+    }
+
+
+
+    // ===== コピー機能 =====
+    function setupCopyButton() {
+      document.getElementById("copy-btn").addEventListener("click", () => {
+        const text = document.getElementById("intro-text").innerText;
+        navigator.clipboard.writeText(text).then(() => {
+          const btn = document.getElementById("copy-btn");
+          const original = btn.innerText;
+          btn.innerText = "コピーしました！";
+          btn.disabled = true;
+          setTimeout(() => {
+            btn.innerText = original;
+            btn.disabled = false;
+          }, 1500);
+        }).catch(() => alert("コピーに失敗しました。"));
+      });
+    }
+
+    // ===== 保存機能 =====
+    function setupSaveButton() {
+      document.getElementById("save-btn").addEventListener("click", () => {
+        const introText = document.getElementById("intro-text").innerText;
+        fetch("/local_save", {
+          method: "POST",
+          headers: {"Content-Type": "application/x-www-form-urlencoded"},
+          body: new URLSearchParams({ intro: introText })
+        })
+        .then(r => r.json())
+        .then(data => alert(data.message || "保存しました！"))
+        .catch(err => alert("保存に失敗しました: " + err));
+      });
+    }
+
+    // ===== リスタート =====
+    function setupRestartButton() {
+      document.getElementById("restart-btn").addEventListener("click", () => {
+        // 状態リセット
+        questionCount = 1;
+        userName = "";
+        questions = [];
+        document.getElementById("name-input").value = "";
+        document.getElementById("question-inputs").innerHTML = `<input class="form-control my-2" name="question1" required placeholder="質問 1">`;
+        document.getElementById("answer-form").innerHTML = "";
+        document.getElementById("extra-answer-form").innerHTML = "";
+        document.getElementById("intro-text").innerText = "";
+        document.getElementById("loading-spinner").classList.add("d-none");
+        document.getElementById("intro-loading-spinner").classList.add("d-none");
+        updateProgress(1);
+        toggleOnly("step1");
+      });
+    }
   </script>
 </body>
 </html>
