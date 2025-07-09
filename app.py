@@ -16,6 +16,7 @@ def home():
 @app.route("/suggest_question", methods=["POST"])
 def suggest_question():
     prompt = "自己紹介でよく使われる面白い質問を1つだけ、日本語で提案してください。\n"
+    prompt += "質問は数字または単語で答えられるようなものにしてください。\n"
     prompt += "その際に「了解」などの前置き・後書き・説明は一切不要です。\n"
     prompt += "出力は質問文のみ、余計なものは書かないでください。\n"
 
