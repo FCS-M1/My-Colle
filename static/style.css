@@ -6,31 +6,49 @@
   font-style: normal;
 }
 
+.kaisei-decol-regular {
+  font-family: "Kaisei Decol", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 h1{
   /* font-family: 'Courier New', Courier, monospace; */
   text-align: center;
-  color:black;
+  color:white;
+  font-family: "Kaisei Decol", serif;
+  font-weight: 400;
+  text-shadow: 2px 2px 3px black, -2px -2px 3px black;
+  background-color: rgba(0, 0, 0, 0.7); 
+  padding: 15px; 
+  margin-bottom: 0px;
+  display: block;
 }
 
 h3{
   text-align: center;
-  color:black;
-  border-bottom: 1px solid #000;
+  color:white;
   display: inline-block;
+  text-shadow: 1px 1px 2px black, -1px -1px 2px black;
+  background-color: rgba(0, 0, 0, 0.7); /* 半透明の黒（透明度0.5） */
+  display: block;
 }
 
 body {
-  background: linear-gradient(to bottom right, hsla(164, 99%, 51%, 0.923), #d5f2ef); /* グラデーション */
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
-  font-family: 'Segoe UI', sans-serif;
-  color: #333;
+ background-image: url('/static/images/tarotkurame.jpg'); /* 背景画像のパス */
+ background-size: cover; /* 背景画像を要素全体にフィットさせる */
+ background-repeat: no-repeat; /* 背景画像の繰り返しをなくす */
+ background-attachment: fixed; /* 背景画像を固定する（スクロールしても動かない） */
+ min-height: 100vh;
+ margin: 0;
+ padding: 0;
+ font-family: 'Segoe UI', sans-serif;
+ color: #333;
 }
 
 .container {
   max-width: 720px;
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: rgba(255, 255, 255, 1.0);
   border-radius: 12px;
   padding: 2rem;
   box-shadow: 0 0 15px rgba(0,0,0,0.1);
