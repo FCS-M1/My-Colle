@@ -15,11 +15,16 @@ def home():
 
 @app.route("/generate_extra_questions", methods=["POST"])
 def generate_extra():
-    answers = request.json.get("answers", {})
-    prompt = "以下の質問と回答を元に、さらに深く知るための追加質問を3つ日本語で生成してください。その際に「了解」等の返答や補足や説明は一切不要で, 追加質問文のみを出力すること。\n"
+    data = request.json
+    answers = data.get("answers", {})
+    count = max(2, int(data.get("extra_count", 3)))  # ユーザー指定 or 最小2
+
+    prompt = f"以下の質問と回答を元に、さらに深く知るための追加質問を{count}つ, 日本語で生成してください。\n"
+    prompt += "その際に「了解」等の返答や補足や説明は一切不要で、追加質問文のみを出力すること。\n"
     for q, a in answers.items():
         prompt += f"Q: {q}\nA: {a}\n"
     prompt += "\n追加質問:"
+
     response = model.generate_content(prompt)
     extra_questions = [line.strip(" 1234567890.").strip() for line in response.text.strip().splitlines() if line.strip()]
     return jsonify({"extra_questions": extra_questions})
@@ -38,8 +43,8 @@ def generate_intro():
     prompt += "その際に「了解」等の返答や補足や説明は一切不要で, 自己紹介文章のみを出力すること。\n"
     for q, a in answers.items():
         prompt += f"Q: {q}\nA: {a}\n"
-
     prompt += "\n自己紹介文:"
+
     response = model.generate_content(prompt)
     return jsonify({"introduction": response.text.strip()})
 
