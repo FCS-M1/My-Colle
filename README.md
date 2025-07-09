@@ -30,7 +30,7 @@ python -m venv myvenv
 
 アクティベーションをする
 ```{copy=True}
-.\myvenv\Scirpts\activate
+.\myvenv\Scripts\activate
 ```
 
 パッケージインストール
