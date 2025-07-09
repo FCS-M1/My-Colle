@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toggleOnly("step1");
     updateProgress(1);
     setupNameForm();
+    setupSlider();
     setupInitialQuestionForm();
     setupCopyButton();
     setupRestartButton();
@@ -213,8 +214,17 @@ async function generate_question() {
     }
 }
 
+// ===== スライダー制御 =====
+function setupSlider() {
+    const slider = document.getElementById("extra-count");
+    const sliderValue = document.getElementById("extra-count-value");
 
-
+    if (slider && sliderValue) {
+        slider.addEventListener("input", () => {
+            sliderValue.textContent = slider.value;
+        });
+    }
+}
 
 // ===== コピー機能 =====
 function setupCopyButton() {
