@@ -148,6 +148,8 @@
     // ステップ3 → 結果
     document.getElementById("extra-answer-form").addEventListener("submit", async (e) => {
       e.preventDefault();
+    
+      let answers = {};
       const formData = new FormData(e.target);
       formData.forEach((v, k) => answers[k] = v);
       const style = document.getElementById("style-choice").value.trim();
