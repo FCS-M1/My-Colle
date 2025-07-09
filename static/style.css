@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css2?family=WDXL+Lubrifont+JP+N&display=swap');
+
+.wdxl-lubrifont-jp-n-regular {
+  font-family: "WDXL Lubrifont JP N", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+h1{
+  /* font-family: 'Courier New', Courier, monospace; */
+  text-align: center;
+  color:black;
+}
+
+h3{
+  text-align: center;
+  color:black;
+  border-bottom: 1px solid #000;
+  display: inline-block;
+}
+
+body {
+  background: linear-gradient(to bottom right, hsla(164, 99%, 51%, 0.923), #d5f2ef); /* グラデーション */
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
+
+.container {
+  max-width: 720px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+
+.card {
+  background-color: rgba(246, 248, 249, 0.9);
+}
+
+label {
+  font-weight: 500;
+}
+
+/* アニメーション */
+.fade-in {
+  animation: fadeIn 1.0s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 非表示用クラス */
+.hidden {
+  display: none;
+}
+
+#intro-text {
+  animation: fadeIn 0.6s ease-in;
+}
