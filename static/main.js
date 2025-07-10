@@ -1,15 +1,18 @@
 // ===== グローバル変数 =====
-const TOTAL_STEPS = 4;      // 1〜4
-let currentStep = 1;        // いま表示しているステップ
-let questionCount = 1;      // 質問数
-let userName = "";          // 名前
-let questions = [];         // 質問配列
+const TOTAL_STEPS = 4;
+let currentStep = 1;
+let questionCount = 1;
+let userName = "";
+let questions = [];
 
 // ===== DOMContentLoaded =====
 document.addEventListener("DOMContentLoaded", () => {
-    // 最初は step1 だけ表示
-    toggleOnly("step1");
-    updateProgress(1);
+    // 初期状態：トップページのみを表示し、メインコンテンツは隠す
+    document.getElementById("start-page").classList.remove("hidden");
+    document.getElementById("main-content").classList.add("hidden");
+
+    // 全てのイベントリスナーをセットアップ
+    setupStartButton();
     setupNameForm();
     setupSlider();
     setupInitialQuestionForm();
@@ -29,95 +32,109 @@ function updateProgress(step) {
 }
 
 function toggleOnly(showId) {
-    ["step1", "step2", "step3", "step4", "result"].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (id === showId) el.classList.remove("hidden");
-    else el.classList.add("hidden");
+    const ids = ["step1", "step2", "step3", "step4", "result"];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.toggle("hidden", id !== showId);
+    });
+}
+
+// ===== スタートボタンの処理 =====
+function setupStartButton() {
+    document.getElementById("start-btn").addEventListener("click", () => {
+        document.getElementById("start-page").classList.add("hidden");
+        document.getElementById("main-content").classList.remove("hidden");
+        updateProgress(1);
+        toggleOnly("step1"); 
     });
 }
 
 // ===== ステップ1: 名前入力 =====
 function setupNameForm() {
     document.getElementById("name-form").addEventListener("submit", e => {
-    e.preventDefault();
-    userName = document.getElementById("name-input").value.trim();
-    if (!userName) return;
-    updateProgress(2);
-    toggleOnly("step2");
+        e.preventDefault();
+        userName = document.getElementById("name-input").value.trim();
+        if (!userName) return;
+        updateProgress(2);
+        toggleOnly("step2");
     });
 }
 
 // ===== ステップ2: 質問入力 =====
 function setupInitialQuestionForm() {
     const questionInputs = document.getElementById("question-inputs");
-
-    // 質問追加ボタン
     document.getElementById("add-question-btn").addEventListener("click", () => {
-    questionCount++;
-    const div = document.createElement("div");
-    div.className = "d-flex align-items-center my-2 question-item";
-    div.innerHTML = `
-        <input class="form-control me-2" name="question${questionCount}" required placeholder="質問 ${questionCount}">
-        <button type="button" class="btn btn-outline-danger btn-sm remove-question-btn">✕</button>
-    `;
-    questionInputs.appendChild(div);
+        questionCount++;
+        const div = document.createElement("div");
+        div.className = "d-flex align-items-center my-2 question-item";
+        div.innerHTML = `
+            <input class="form-control me-2" name="question${questionCount}" required placeholder="質問 ${questionCount}">
+            <button type="button" class="btn btn-outline-danger btn-sm remove-question-btn">✕</button>
+        `;
+        questionInputs.appendChild(div);
     });
 
-    // AIによる質問提案ボタン
     document.getElementById("suggest-question-btn").addEventListener("click", generate_question);
-
-
-    // 削除ボタンのイベント（動的追加にも対応）
     questionInputs.addEventListener("click", (e) => {
-    if (e.target.classList.contains("remove-question-btn")) {
-        e.target.closest(".question-item").remove();
-    }
+        if (e.target.classList.contains("remove-question-btn")) {
+            e.target.closest(".question-item").remove();
+        }
     });
 
-    // フォーム送信
     document.getElementById("initial-question-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    questions = Array.from(formData.values()).filter(q => q.trim());
-    buildAnswerForm();
-    updateProgress(3);
-    toggleOnly("step3");
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        questions = Array.from(formData.values()).filter(q => q && q.trim());
+        if (questions.length === 0) return;
+        buildAnswerForm();
+        updateProgress(3);
+        toggleOnly("step3");
     });
 }
-
 
 // ===== ステップ3: 回答入力 =====
 function buildAnswerForm() {
     const form = document.getElementById("answer-form");
     form.innerHTML = "";
     questions.forEach(q => {
-    form.innerHTML += `<label>${q}</label><input name="${q}" class="form-control my-2" required>`;
+        form.innerHTML += `<label class="form-label">${q}</label><input name="${q}" class="form-control my-2" required>`;
     });
     form.innerHTML += `<button class="btn btn-success mt-3">次へ</button>`;
-
     form.addEventListener("submit", handleAnswerSubmit);
 }
 
+//【修正箇所】スピナー表示のロジックを修正
 async function handleAnswerSubmit(e) {
     e.preventDefault();
-    const answers = {};
-    const formData = new FormData(e.target);
-    formData.forEach((v, k) => answers[k] = v);
+    const answers = Object.fromEntries(new FormData(e.target));
     const extraCount = parseInt(document.getElementById("extra-count").value);
+    
+    const step3Div = document.getElementById("step3");
+    const spinner = document.getElementById("loading-spinner");
 
-    document.getElementById("loading-spinner").classList.remove("d-none");
-    const res = await fetch("/generate_extra_questions", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ answers, extra_count: extraCount })
-    });
-    const data = await res.json();
-    document.getElementById("loading-spinner").classList.add("d-none");
+    // スピナーを表示し、フォームを非表示に
+    step3Div.classList.add("hidden");
+    spinner.classList.remove("d-none");
 
-    buildExtraAnswerForm(data.extra_questions);
-    updateProgress(4);
-    toggleOnly("step4");
+    try {
+        const res = await fetch("/generate_extra_questions", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ answers, extra_count: extraCount })
+        });
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
+        buildExtraAnswerForm(data.extra_questions);
+        updateProgress(4);
+        toggleOnly("step4");
+    } catch (err) {
+        alert("追加質問の生成に失敗しました。");
+        toggleOnly("step3"); // エラー時はステップ3に戻す
+    } finally {
+        // 処理完了後、必ずスピナーを非表示に
+        spinner.classList.add("d-none");
+    }
 }
 
 // ===== ステップ4: 追加回答 & スタイル =====
@@ -125,7 +142,7 @@ function buildExtraAnswerForm(extraQuestions) {
     const form = document.getElementById("extra-answer-form");
     form.innerHTML = "";
     extraQuestions.forEach(q => {
-    form.innerHTML += `<label>${q}</label><input name="${q}" class="form-control my-2" required>`;
+        form.innerHTML += `<label class="form-label">${q}</label><input name="${q}" class="form-control my-2" required>`;
     });
     form.innerHTML += `
     <div class="mt-4">
@@ -136,89 +153,72 @@ function buildExtraAnswerForm(extraQuestions) {
         <button class="btn btn-info mt-4">自己紹介を生成</button>
     </div>
     `;
-
     form.addEventListener("submit", handleIntroGenerate);
 }
 
 async function handleIntroGenerate(e) {
     e.preventDefault();
-    const answers = {};
-    const formData = new FormData(e.target);
-    formData.forEach((v, k) => answers[k] = v);
+    let allAnswers = Object.fromEntries(new FormData(document.getElementById("answer-form")));
+    const extraAnswers = Object.fromEntries(new FormData(e.target));
+    Object.assign(allAnswers, extraAnswers);
+
     const style = document.getElementById("style-choice").value.trim();
+    const step4Div = document.getElementById("step4");
+    const spinner = document.getElementById("intro-loading-spinner");
 
-    document.getElementById("intro-loading-spinner").classList.remove("d-none");
-    const res = await fetch("/generate_intro", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ answers, style, name: userName })
-    });
-    const data = await res.json();
-    document.getElementById("intro-loading-spinner").classList.add("d-none");
+    step4Div.classList.add("hidden");
+    spinner.classList.remove("d-none");
 
-    document.getElementById("intro-text").innerText = data.introduction;
-    toggleOnly("result");
+    try {
+        const res = await fetch("/generate_intro", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ answers: allAnswers, style, name: userName })
+        });
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
+        document.getElementById("intro-text").innerText = data.introduction;
+        toggleOnly("result");
+    } catch (err) {
+        alert("自己紹介の生成に失敗しました。");
+        toggleOnly("step4");
+    } finally {
+        spinner.classList.add("d-none");
+    }
 }
 
+// ===== その他機能（変更なし） =====
 async function generate_question() {
     const suggestedBox = document.getElementById("suggested-question-box");
     const suggestedText = document.getElementById("suggested-question-text");
     const applyBtn = document.getElementById("apply-suggested-btn");
     const regenBtn = document.getElementById("regen-suggested-btn");
-
     try {
-        const res = await fetch("/suggest_question", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
-        });
-
+        const res = await fetch("/suggest_question", { method: "POST", headers: { "Content-Type": "application/json" } });
         if (!res.ok) throw new Error("サーバーエラー");
-
         const data = await res.json();
-        const suggested = data.question;
-
-        // 一旦表示して判断させる
-        suggestedText.textContent = suggested;
+        suggestedText.textContent = data.question;
         suggestedBox.classList.remove("d-none");
-
-        // ボタンイベント（初回のみ）
         applyBtn.onclick = () => {
-            const inputs = document.querySelectorAll("#question-inputs input");
-            let filled = false;
-            for (const input of inputs) {
-                if (!input.value.trim()) {
-                    input.value = suggested;
-                    filled = true;
-                    break;
-                }
-            }
-            if (!filled) {
-                questionCount++;
-                const div = document.createElement("div");
-                div.className = "d-flex align-items-center my-2 question-item";
-                div.innerHTML = `
-                    <input class="form-control me-2" name="question${questionCount}" required value="${suggested}" placeholder="質問 ${questionCount}">
-                    <button type="button" class="btn btn-outline-danger btn-sm remove-question-btn">✕</button>
-                `;
-                document.getElementById("question-inputs").appendChild(div);
+            const emptyInput = document.querySelector("#question-inputs input:placeholder-shown");
+            if (emptyInput) {
+                emptyInput.value = data.question;
+            } else {
+                document.getElementById("add-question-btn").click();
+                const allInputs = document.querySelectorAll("#question-inputs input");
+                allInputs[allInputs.length - 1].value = data.question;
             }
             suggestedBox.classList.add("d-none");
         };
-
-        regenBtn.onclick = () => {
-            generate_question(); // 再帰的に再生成
-        };
+        regenBtn.onclick = generate_question;
     } catch (err) {
         alert("質問の提案に失敗しました: " + err.message);
     }
 }
 
-// ===== スライダー制御 =====
 function setupSlider() {
     const slider = document.getElementById("extra-count");
     const sliderValue = document.getElementById("extra-count-value");
-
     if (slider && sliderValue) {
         slider.addEventListener("input", () => {
             sliderValue.textContent = slider.value;
@@ -226,53 +226,48 @@ function setupSlider() {
     }
 }
 
-// ===== コピー機能 =====
 function setupCopyButton() {
     document.getElementById("copy-btn").addEventListener("click", () => {
-    const text = document.getElementById("intro-text").innerText;
-    navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById("copy-btn");
-        const original = btn.innerText;
-        btn.innerText = "コピーしました！";
-        btn.disabled = true;
-        setTimeout(() => {
-        btn.innerText = original;
-        btn.disabled = false;
-        }, 1500);
-    }).catch(() => alert("コピーに失敗しました。"));
+        const text = document.getElementById("intro-text").innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById("copy-btn");
+            const original = btn.innerText;
+            btn.innerText = "コピーしました！";
+            btn.disabled = true;
+            setTimeout(() => {
+                btn.innerText = original;
+                btn.disabled = false;
+            }, 1500);
+        }).catch(() => alert("コピーに失敗しました。"));
     });
 }
 
-// ===== 保存機能 =====
 function setupSaveButton() {
     document.getElementById("save-btn").addEventListener("click", () => {
-    const introText = document.getElementById("intro-text").innerText;
-    fetch("/local_save", {
-        method: "POST",
-        headers: {"Content-Type": "application/x-www-form-urlencoded"},
-        body: new URLSearchParams({ intro: introText })
-    })
-    .then(r => r.json())
-    .then(data => alert(data.message || "保存しました！"))
-    .catch(err => alert("保存に失敗しました: " + err));
+        const introText = document.getElementById("intro-text").innerText;
+        fetch("/local_save", {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: new URLSearchParams({ intro: introText })
+        })
+        .then(r => r.json())
+        .then(data => alert(data.message || "保存しました！"))
+        .catch(err => alert("保存に失敗しました: " + err));
     });
 }
 
-// ===== リスタート =====
 function setupRestartButton() {
     document.getElementById("restart-btn").addEventListener("click", () => {
-    // 状態リセット
-    questionCount = 1;
-    userName = "";
-    questions = [];
-    document.getElementById("name-input").value = "";
-    document.getElementById("question-inputs").innerHTML = `<input class="form-control my-2" name="question1" required placeholder="質問 1">`;
-    document.getElementById("answer-form").innerHTML = "";
-    document.getElementById("extra-answer-form").innerHTML = "";
-    document.getElementById("intro-text").innerText = "";
-    document.getElementById("loading-spinner").classList.add("d-none");
-    document.getElementById("intro-loading-spinner").classList.add("d-none");
-    updateProgress(1);
-    toggleOnly("step1");
+        questionCount = 1;
+        userName = "";
+        questions = [];
+        document.getElementById("name-form").reset();
+        document.getElementById("initial-question-form").reset();
+        document.getElementById("question-inputs").innerHTML = `<input class="form-control my-2" name="question1" required placeholder="質問 1">`;
+        document.getElementById("answer-form").innerHTML = "";
+        document.getElementById("extra-answer-form").innerHTML = "";
+        document.getElementById("intro-text").innerText = "";
+        document.getElementById("start-page").classList.remove("hidden");
+        document.getElementById("main-content").classList.add("hidden");
     });
 }

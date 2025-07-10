@@ -11,94 +11,86 @@
 </head>
 <body>
   <div class="container mt-5">
-    <!-- ステップバー -->
-    <div class="mb-4">
-      <h5 id="step-label">ステップ 1 / 4</h5>
-      <div class="progress">
-        <div id="progress-bar" class="progress-bar" style="width: 25%;"></div>
-      </div>
+    <div id="start-page" class="text-center py-5 fade-in">
+      <h1 class="mb-3">自己紹介メーカー</h1>
+      <p class="lead mb-4">いくつかの質問に答えるだけで、AIがあなただけのユニークな自己紹介文を自動で作成します。</p>
+      <button id="start-btn" class="btn btn-primary btn-lg">スタート！</button>
     </div>
 
-    <!-- ステップ1: 名前入力 -->
-    <div id="step1" class="fade-in">
-      <h4>まずはあなたの名前を教えてください</h4>
-      <form id="name-form" autocomplete="off">
-        <input type="text" class="form-control my-3" name="name" id="name-input" placeholder="名前を入力" required>
-        <button class="btn btn-primary">次へ</button>
-      </form>
-    </div>
-
-    <!-- ステップ2: 質問入力 -->
-    <div id="step2" class="hidden fade-in">
-      <h4>自己紹介で使いたい質問を入力してください（1つ以上）</h4>
-
-      <form id="initial-question-form" autocomplete="off">
-        <div id="question-inputs">
-          <input class="form-control my-2" name="question1" required placeholder="質問 1">
+    <div id="main-content" class="hidden">
+      <div class="mb-4">
+        <h5 id="step-label">ステップ 1 / 4</h5>
+        <div class="progress">
+          <div id="progress-bar" class="progress-bar" style="width: 25%;"></div>
         </div>
-        <div class="d-flex justify-content-between mt-2">
-          <div>
-            <button type="button" class="btn btn-outline-secondary me-2" id="add-question-btn">＋ 質問を追加</button>
-            <button type="button" class="btn btn-outline-primary" id="suggest-question-btn">質問をランダム生成</button>
-          </div>
+      </div>
+
+      <div id="step1" class="hidden">
+        <h4>まずはあなたの名前を教えてください</h4>
+        <form id="name-form" autocomplete="off">
+          <input type="text" class="form-control my-3" name="name" id="name-input" placeholder="名前を入力" required>
           <button class="btn btn-primary">次へ</button>
-        </div>
-      </form>
-      <div id="suggested-question-box" class="alert alert-light border d-flex justify-content-between align-items-center mt-3 d-none">
-        <span id="suggested-question-text" class="me-2">ここに候補が入る</span>
-        <div>
-          <button id="apply-suggested-btn" class="btn btn-sm btn-success me-2">追加</button>
-          <button id="regen-suggested-btn" class="btn btn-sm btn-outline-secondary">再生成</button>
-        </div>
+        </form>
       </div>
-    </div>
 
-
-
-    <!-- ステップ3: 回答入力 -->
-    <div id="step3" class="hidden fade-in">
-      <h4>質問に答えてください</h4>
-      <form id="answer-form"></form>
-      <div id="slider-section" class="mt-4">
-        <label for="extra-count" class="form-label">追加質問の数（2〜10）</label>
-        <input type="range" class="form-range" id="extra-count" min="2" max="10" value="3" step="1">
-        <div>選択中: <span id="extra-count-value">3</span> 問</div>
-      </div>
-    </div>
-
-    <!-- スピナー（質問生成中） -->
-    <div id="loading-spinner" class="d-none text-center my-4">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p>追加の質問を生成中...</p>
-    </div>
-
-    <!-- ステップ4: 追加質問に答える + スタイル指定 + 生成 -->
-    <div id="step4" class="hidden fade-in">
-      <h4>さらに深掘りして答えてください</h4>
-      <form id="extra-answer-form"></form>
-    </div>
-
-    <!-- スピナー（自己紹介生成中） -->
-    <div id="intro-loading-spinner" class="d-none text-center my-4">
-      <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Loading...</span>
-      </div>
-      <p>自己紹介を生成中...</p>
-    </div>
-
-    <!-- 生成結果 -->
-    <div id="result" class="hidden fade-in">
-      <h4>あなたの自己紹介文</h4>
-      <div class="card p-4 my-3 shadow-sm">
-        <p id="intro-text"></p>
-        <div class="text-end">
-          <button id="copy-btn" class="btn btn-outline-secondary btn-sm">コピーする</button>
+      <div id="step2" class="hidden">
+        <h4>自己紹介で使いたい質問を入力してください（1つ以上）</h4>
+        <form id="initial-question-form" autocomplete="off">
+          <div id="question-inputs">
+            <input class="form-control my-2" name="question1" required placeholder="質問 1">
+          </div>
+          <div class="d-flex justify-content-between mt-2">
+            <div>
+              <button type="button" class="btn btn-outline-secondary me-2" id="add-question-btn">＋ 質問を追加</button>
+              <button type="button" class="btn btn-outline-primary" id="suggest-question-btn">質問をランダム生成</button>
+            </div>
+            <button class="btn btn-primary">次へ</button>
+          </div>
+        </form>
+        <div id="suggested-question-box" class="alert alert-light border d-flex justify-content-between align-items-center mt-3 d-none">
+          <span id="suggested-question-text" class="me-2">ここに候補が入る</span>
+          <div>
+            <button id="apply-suggested-btn" class="btn btn-sm btn-success me-2">追加</button>
+            <button id="regen-suggested-btn" class="btn btn-sm btn-outline-secondary">再生成</button>
+          </div>
         </div>
       </div>
-      <button id="restart-btn" class="btn btn-secondary">最初に戻る</button>
-      <button id="save-btn" class="btn btn-secondary">ローカルに保存</button>
+
+      <div id="step3" class="hidden">
+        <h4>質問に答えてください</h4>
+        <form id="answer-form"></form>
+        <div id="slider-section" class="mt-4">
+          <label for="extra-count" class="form-label">追加質問の数（2〜10）</label>
+          <input type="range" class="form-range" id="extra-count" min="2" max="10" value="3" step="1">
+          <div>選択中: <span id="extra-count-value">3</span> 問</div>
+        </div>
+      </div>
+
+      <div id="step4" class="hidden">
+        <h4>さらに深掘りして答えてください</h4>
+        <form id="extra-answer-form"></form>
+      </div>
+
+      <div id="result" class="hidden">
+        <h4>あなたの自己紹介文</h4>
+        <div class="card p-4 my-3 shadow-sm">
+          <p id="intro-text"></p>
+          <div class="text-end">
+            <button id="copy-btn" class="btn btn-outline-secondary btn-sm">コピーする</button>
+          </div>
+        </div>
+        <button id="restart-btn" class="btn btn-secondary">最初に戻る</button>
+        <button id="save-btn" class="btn btn-secondary">ローカルに保存</button>
+      </div>
+      
+      <div id="loading-spinner" class="d-none text-center my-4">
+        <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+        <p>追加の質問を生成中...</p>
+      </div>
+      <div id="intro-loading-spinner" class="d-none text-center my-4">
+        <div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div>
+        <p>自己紹介を生成中...</p>
+      </div>
     </div>
   </div>
 
