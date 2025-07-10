@@ -2,12 +2,16 @@ from flask import Flask, render_template, request, jsonify
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+import json
+import uuid
 
 load_dotenv()
 
 app = Flask(__name__)
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-2.5-flash")
+
+SAVE_FILE = "saved_intros.json"
 
 @app.route("/")
 def home():
@@ -31,7 +35,7 @@ def suggest_question():
 def generate_extra():
     data = request.json
     answers = data.get("answers", {})
-    count = max(2, int(data.get("extra_count", 3)))  # ユーザー指定 or 最小2
+    count = max(2, int(data.get("extra_count", 3)))
 
     prompt = f"以下の質問と回答を元に、さらに深く知るための追加質問を{count}つ, 日本語で生成してください。\n"
     prompt += "その際に「了解」等の返答や補足や説明は一切不要で、追加質問文のみを出力すること。\n"
@@ -56,7 +60,7 @@ def generate_intro():
         prompt = "以下の質問と回答をもとに、ユニークで魅力的な自己紹介文を日本語で作成してください。"
 
     prompt += f"対象の名前は{name}です\n"
-    prompt += "出力に「了解」等の返答や補足や説明は一切不要で, 200字以内の自己紹介文章のみを出力すること。\n"
+    prompt += "出力に「了解」等の返答や補足や説明は一切不要で, 300字以内の自己紹介文章のみを出力すること。\n"
     for q, a in answers.items():
         prompt += f"Q: {q}\nA: {a}\n"
     prompt += "\n自己紹介文:"
@@ -66,17 +70,31 @@ def generate_intro():
 
 @app.route("/local_save", methods=["POST"])
 def local_save():
+    name = request.form.get("name")
     intro_text = request.form.get("intro")
 
-    if not intro_text:
-        return jsonify({"status": "error", "message": "自己紹介文が空です"}), 400
+    if not intro_text or not name:
+        return jsonify({"status": "error", "message": "データが不足しています"}), 400
+
+    new_entry = {
+        "id": str(uuid.uuid4()),
+        "name": name,
+        "intro": intro_text
+    }
 
     try:
-        # ファイルに保存（上書き）
-        with open("saved_intro.txt", "a", encoding="utf-8") as f:
-            f.write(intro_text)
+        try:
+            with open(SAVE_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except (FileNotFoundError, json.JSONDecodeError):
+            data = []
+        
+        data.insert(0, new_entry)
 
-        return jsonify({"status": "success", "message": "自己紹介文を保存しました"})
+        with open(SAVE_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+
+        return jsonify({"status": "success", "message": "自己紹介を保存しました"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 

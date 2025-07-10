@@ -104,7 +104,7 @@ function buildAnswerForm() {
     form.addEventListener("submit", handleAnswerSubmit);
 }
 
-//【修正箇所】スピナー表示のロジックを修正
+//スピナー表示のロジックを修正
 async function handleAnswerSubmit(e) {
     e.preventDefault();
     const answers = Object.fromEntries(new FormData(e.target));
@@ -132,7 +132,6 @@ async function handleAnswerSubmit(e) {
         alert("追加質問の生成に失敗しました。");
         toggleOnly("step3"); // エラー時はステップ3に戻す
     } finally {
-        // 処理完了後、必ずスピナーを非表示に
         spinner.classList.add("d-none");
     }
 }
@@ -187,7 +186,7 @@ async function handleIntroGenerate(e) {
     }
 }
 
-// ===== その他機能（変更なし） =====
+// ===== その他機能 =====
 async function generate_question() {
     const suggestedBox = document.getElementById("suggested-question-box");
     const suggestedText = document.getElementById("suggested-question-text");
@@ -242,17 +241,31 @@ function setupCopyButton() {
     });
 }
 
+// ===== 保存機能 =====
 function setupSaveButton() {
     document.getElementById("save-btn").addEventListener("click", () => {
         const introText = document.getElementById("intro-text").innerText;
+
+        //【修正点】自己紹介文(intro)に加えて、名前(name)も送信する
+        const saveData = new URLSearchParams({
+            intro: introText,
+            name: userName // ステップ1で入力された名前
+        });
+
         fetch("/local_save", {
             method: "POST",
             headers: {"Content-Type": "application/x-www-form-urlencoded"},
-            body: new URLSearchParams({ intro: introText })
+            body: saveData
         })
         .then(r => r.json())
-        .then(data => alert(data.message || "保存しました！"))
-        .catch(err => alert("保存に失敗しました: " + err));
+        .then(data => {
+            if (data.status === "success") {
+                alert(data.message);
+            } else {
+                alert("保存に失敗しました: " + data.message);
+            }
+        })
+        .catch(err => alert("保存処理中にエラーが発生しました: " + err));
     });
 }
 
