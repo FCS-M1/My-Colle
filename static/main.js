@@ -87,7 +87,8 @@ function setupNameForm() {
     if (!nameForm) return;
     nameForm.addEventListener("submit", e => {
         e.preventDefault();
-        userName = document.getElementById("name-input").value.trim();
+        let input = document.getElementById("name-input").value.trim();
+        userName = input.replace(/[「」()（）＜＞〈〉【】]/g, '');
         if (!userName) return;
         updateProgress(2);
         toggleOnly("step2");
