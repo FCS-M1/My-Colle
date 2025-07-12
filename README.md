@@ -1,16 +1,26 @@
 # 構成内容
-```
+```{copy=False}
 📂 project-root/
-┣ーー 📂 myvenv -------- 仮想環境(後述するコマンドを実行して作成)
+┣ーー 📂 .myvenv -------- 仮想環境(後述するコマンドを実行して作成)
 ┣ーー 📂 static/ 
-┃ ┗ー 📜 style.css ---------- cssファイル 
-┃ ┗ー 📜 main.js ---------- JavaScriptファイル
+┃ ┣ー📜 style.css ---------- cssファイル 
+┃ ┣ー📜 borad.js ---------- Javascriptファイル(掲示板側) 
+┃ ┗ー📜 main.js ---------- JavaScriptファイル(メイン側)
+┃
 ┣ーー📂 templates/
-┃ ┗ー 📜 index.html ---------- フロント部分
-┣ーー📜 .env ---------- 環境変数を入れている(要gitignore)
+┃ ┣ー 📜 base.html ---------- メイン部分
+┃ ┣ー 📜 board.html ---------- メイン部分
+┃ ┣ー 📜 create.html ---------- 自己紹介作成部分
+┃ ┣ー 📜 login.html ---------- ログイン部分
+┃ ┣ー 📜 register.html ---------- 登録部分
+┃ ┗ー 📜 index.html ---------- トップページ
+┃
+┣ーー📜 .env ---------- 環境変数を入れているファイル(要gitignore)
 ┣ーー📜 .gitignore
-┣ーー📜 app.py ----------- バック部分(PythonのFlaskを使用)
+┣ーー📜 app.py ----------- バックエンド部分(PythonのFlaskを使用)
 ┣ーー📜 README.md
+┣ーー📜 saved_intros.json ------------- 自己紹介を記録しておくためのjsonファイル(要gitignore)
+┣ーー📜 users.json ------------- ユーザのログインIDと暗号化したパスワードを補完しておくためのjsonファイル(要gitignore)
 ┗ーー📜 requirements.txt----------- pythonのパッケージ管理
 ```
 
