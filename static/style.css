@@ -33,12 +33,12 @@ background-image:
     /* 点（星）のスタイルをここに並べる */
     radial-gradient(circle at 10% 20%, #E0E0E0 1px, transparent 1px),  /* 1つ目の点 */
     radial-gradient(circle at 80% 40%, #E0E0E0 1px, transparent 1px),  /* 2つ目の点 */
-    radial-gradient(circle at 10% 70%, #E0E0E0 1px, transparent 1px),  /* 3つ目の点 */
+    /*radial-gradient(circle at 10% 70%, #E0E0E0 1px, transparent 1px),  /* 3つ目の点 */
     radial-gradient(circle at 90% 35%, #E0E0E0 1px, transparent 1px),  /* 4つ目の点 */
     radial-gradient(circle at 75% 15%, #E0E0E0 1px, transparent 1px),  /* 5つ目の点 */
-    radial-gradient(circle at 10% 10%, #E0E0E0 1px, transparent 1px),  /* 1つ目の点 */
-    radial-gradient(circle at 10% 40%, #E0E0E0 1px, transparent 1px),  /* 2つ目の点 */
-    radial-gradient(circle at 10% 70%, #E0E0E0 1px, transparent 1px),  /* 3つ目の点 */
+    radial-gradient(circle at 20% 10%, #E0E0E0 1px, transparent 1px),  /* 1つ目の点 */
+    /*radial-gradient(circle at  5% 50%, #E0E0E0 1px, transparent 1px),  /* 2つ目の点 */
+    radial-gradient(circle at 13% 90%, #E0E0E0 1px, transparent 1px),  /* 3つ目の点 */
     radial-gradient(circle at 95% 10%, #E0E0E0 1px, transparent 1px),  /* 4つ目の点 */
     radial-gradient(circle at 85% 20%, #E0E0E0 1px, transparent 1px),  /* 5つ目の点 */
     /* ここに元の紫のグラデーションを置く */
