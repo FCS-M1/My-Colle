@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}みんなの自己紹介{% endblock %}
+
+{% block content %}
+  <h1 class="mb-4">みんなの自己紹介</h1>
+  
+  <div id="intros-container">
+    <p id="loading-message" class="text-center">読み込み中...</p>
+  </div>
+  
+  <div class="text-center mt-4">
+    <a href="{{ url_for('create') }}" class="btn btn-secondary">自己紹介を新しく作る</a>
+  </div>
+
+  <div id="user-info" data-logged-in="{{ logged_in }}"></div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='board.js') }}"></script>
+{% endblock %}
