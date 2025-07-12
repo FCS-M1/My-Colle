@@ -20,6 +20,12 @@
   border-bottom: 1px solid #dee2e6;
 }
 
+/* 「self-intro-maker」というクラスを持つ要素にのみスタイルを適用 */
+.mini-scale {
+  transform: scale(0.75);
+  transform-origin: center;
+}
+
 h1 {
   text-align: center;
   color: white; /* ボックス内の文字色 */
