@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
             </form>
         ` : '';
         
-        // ★ BootstrapのCollapseを制御するためのユニークなIDを生成
+        //  BootstrapのCollapseを制御するためのユニークなIDを生成
         const collapseId = `comments-collapse-${intro.id}`;
 
         card.innerHTML = `
@@ -106,8 +106,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- リアクション部分の更新関数 ---
     function updateReactions(footerElement, introId, reactions) {
-        const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢'];
-        
+        const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '😍'];
+      
         let reactionsHTML = '<div class="d-flex align-items-center gap-2">';
 
         REACTION_OPTIONS.forEach(emoji => {

@@ -283,7 +283,7 @@ function setupCopyButton() {
     });
 }
 
-// ===== 保存機能 =====
+// ===== 投稿機能 =====
 function setupSaveButton() {
     const saveBtn = document.getElementById("save-btn");
     if (!saveBtn) return;
@@ -291,7 +291,6 @@ function setupSaveButton() {
         const introText = document.getElementById("intro-text")?.innerText;
         if (!introText) return;
 
-        // 【修正点】自己紹介文(intro)と、自己紹介文中の名前(name)を送信する
         // 投稿者名はサーバー側で自動的に付与される
         const saveData = new URLSearchParams({
             intro: introText,
@@ -307,7 +306,7 @@ function setupSaveButton() {
             if (!r.ok) {
                 // ログインしていない場合などはここでエラーになる
                 if (r.status === 401) { // Unauthorized
-                    alert("保存するにはログインが必要です。");
+                    alert("投稿するにはログインが必要です。");
                     window.location.href = "/login";
                 }
                 throw new Error(`Server responded with status ${r.status}`);
@@ -317,14 +316,14 @@ function setupSaveButton() {
         .then(data => {
             if (data.status === "success") {
                 alert(data.message);
-                // 保存成功したら掲示板ページに飛ばす
+                // 投稿成功したら掲示板ページに飛ばす
                 window.location.href = "/board";
             } else {
-                alert("保存に失敗しました: " + data.message);
+                alert("投稿に失敗しました: " + data.message);
             }
         })
         .catch(err => {
-            console.error("保存処理中にエラーが発生しました: ", err);
+            console.error("投稿処理中にエラーが発生しました: ", err);
         });
     });
 }

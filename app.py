@@ -137,7 +137,7 @@ def local_save():
         data = read_json(INTRO_FILE)
         data.insert(0, new_entry)
         write_json(INTRO_FILE, data)
-        return jsonify({"status": "success", "message": "自己紹介を保存しました"})
+        return jsonify({"status": "success", "message": "掲示板に投稿しました!"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
