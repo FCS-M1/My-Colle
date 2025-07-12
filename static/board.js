@@ -187,8 +187,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const introId = form.closest('.card').dataset.introId;
         const input = form.querySelector('input[type="text"]');
         const commentText = input.value.trim();
+        const submitButton = form.querySelector('button[type="submit"]');
 
         if (!commentText) return;
+
+        // 🔒 ボタンを無効化（送信中）
+        submitButton.disabled = true;
 
         try {
             const response = await fetch(`/comment/${introId}`, {
@@ -205,28 +209,30 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!response.ok) throw new Error('リプライの投稿に失敗しました。');
 
             const result = await response.json();
-            
+
             const cardToUpdate = container.querySelector(`.card[data-intro-id="${introId}"]`);
             if (cardToUpdate) {
                 const commentsContainer = cardToUpdate.querySelector('.comments-container');
                 const commentsCountSpan = cardToUpdate.querySelector('.comments-count');
-                
+
                 renderComments(commentsContainer, result.comments);
-                // ★ コメント数を更新
                 commentsCountSpan.textContent = result.comments.length;
                 input.value = '';
 
-                // ★ 投稿後、コメント欄を開く
+                // コメント欄を開く
                 const collapseElement = cardToUpdate.querySelector('.collapse');
                 if (collapseElement && !collapseElement.classList.contains('show')) {
                     const bsCollapse = new bootstrap.Collapse(collapseElement);
                     bsCollapse.show();
                 }
             }
-
         } catch (error) {
             console.error(error);
             alert(error.message);
+        } finally {
+            setTimeout(() => {
+                submitButton.disabled = false;
+            }, 1000 * 60);
         }
     }
 });
