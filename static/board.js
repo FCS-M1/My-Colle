@@ -300,7 +300,9 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error(error);
             alert(error.message);
         } finally {
-            submitButton.disabled = false;
+            setTimeout(() => {
+                submitButton.disabled = false;
+            }, 1000 * 60);
         }
     }
 
