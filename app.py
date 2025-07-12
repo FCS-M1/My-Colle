@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
@@ -8,16 +10,184 @@ import uuid
 load_dotenv()
 
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.urandom(24)
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = "このページにアクセスするにはログインが必要です。"
+
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-SAVE_FILE = "saved_intros.json"
+USER_FILE = "users.json"
+INTRO_FILE = "saved_intros.json"
 
+# --- ユーティリティ関数 ---
+def read_json(file_path):
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
+
+def write_json(file_path, data):
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+# --- ユーザーモデル ---
+class User(UserMixin):
+    def __init__(self, id, username, password):
+        self.id = id
+        self.username = username
+        self.password = password
+
+    @staticmethod
+    def get(user_id):
+        users = read_json(USER_FILE)
+        for user_data in users:
+            if user_data.get('id') == user_id:
+                return User(id=user_data['id'], username=user_data['username'], password=user_data['password'])
+        return None
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.get(user_id)
+
+# --- (既存の認証ルートは変更なし) ---
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        users = read_json(USER_FILE)
+        if any(u['username'] == username for u in users):
+            flash('このユーザー名は既に使用されています。', 'error')
+            return redirect(url_for('register'))
+        new_user = {
+            'id': str(uuid.uuid4()),
+            'username': username,
+            'password': generate_password_hash(password, method='pbkdf2:sha256')
+        }
+        users.append(new_user)
+        write_json(USER_FILE, users)
+        flash('登録が完了しました。ログインしてください。', 'success')
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        users = read_json(USER_FILE)
+        user_data = next((u for u in users if u['username'] == username), None)
+        if user_data and check_password_hash(user_data['password'], password):
+            user = User(id=user_data['id'], username=user_data['username'], password=user_data['password'])
+            login_user(user, remember=True)
+            return redirect(url_for('home'))
+        flash('ユーザー名またはパスワードが正しくありません。', 'error')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('home'))
+
+# --- メイン機能のルート ---
 @app.route("/")
 def home():
     return render_template("index.html")
 
-# --- （既存のルートは変更なし） ---
+@app.route("/create")
+@login_required
+def create():
+    return render_template("create.html")
+
+@app.route("/board")
+def board():
+    # ★ ログイン状態をテンプレートに渡す
+    return render_template("board.html", logged_in=current_user.is_authenticated)
+
+@app.route("/local_save", methods=["POST"])
+@login_required
+def local_save():
+    intro_text = request.form.get("intro")
+    name_in_intro = request.form.get("name")
+    if not intro_text or not name_in_intro:
+        return jsonify({"status": "error", "message": "データが不足しています"}), 400
+    
+    # ★ 新規作成時にリアクション用の空の辞書を追加
+    new_entry = { 
+        "id": str(uuid.uuid4()), 
+        "author": current_user.username,
+        "name": name_in_intro,
+        "intro": intro_text,
+        "reactions": {} # リアクション用のキーを追加
+    }
+    
+    try:
+        data = read_json(INTRO_FILE)
+        data.insert(0, new_entry)
+        write_json(INTRO_FILE, data)
+        return jsonify({"status": "success", "message": "自己紹介を保存しました"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# --- ★ リアクション機能のAPI ---
+@app.route("/react/<intro_id>", methods=["POST"])
+@login_required
+def react(intro_id):
+    data = request.get_json()
+    reaction_emoji = data.get("reaction")
+
+    if not reaction_emoji:
+        return jsonify({"status": "error", "message": "リアクションが指定されていません"}), 400
+
+    intros = read_json(INTRO_FILE)
+    target_intro = next((item for item in intros if item['id'] == intro_id), None)
+
+    if not target_intro:
+        return jsonify({"status": "error", "message": "投稿が見つかりません"}), 404
+
+    # リアクション辞書を初期化
+    if "reactions" not in target_intro:
+        target_intro["reactions"] = {}
+
+    # 指定された絵文字のリアクションリストを取得 (なければ新規作成)
+    reaction_list = target_intro["reactions"].get(reaction_emoji, [])
+    
+    # ユーザーが既にリアクションしているかチェック
+    username = current_user.username
+    if username in reaction_list:
+        # 既にあればリアクションを解除
+        reaction_list.remove(username)
+    else:
+        # なければリアクションを追加
+        reaction_list.append(username)
+    
+    # 更新したリストを辞書に戻す
+    target_intro["reactions"][reaction_emoji] = reaction_list
+
+    write_json(INTRO_FILE, intros)
+
+    return jsonify({
+        "status": "success",
+        "reactions": target_intro["reactions"]
+    })
+
+
+@app.route("/api/intros")
+def get_intros():
+    data = read_json(INTRO_FILE)
+    return jsonify(data)
+
+# --- (AI関連のAPIは変更なし) ---
 @app.route("/suggest_question", methods=["POST"])
 def suggest_question():
     prompt = "自己紹介でよく使われる面白い質問を1つだけ、日本語で提案してください。\n"
@@ -61,41 +231,6 @@ def generate_intro():
     response = model.generate_content(prompt)
     return jsonify({"introduction": response.text.strip()})
 
-@app.route("/local_save", methods=["POST"])
-def local_save():
-    name = request.form.get("name")
-    intro_text = request.form.get("intro")
-    if not intro_text or not name:
-        return jsonify({"status": "error", "message": "データが不足しています"}), 400
-    new_entry = { "id": str(uuid.uuid4()), "name": name, "intro": intro_text }
-    try:
-        try:
-            with open(SAVE_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            data = []
-        data.insert(0, new_entry)
-        with open(SAVE_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-        return jsonify({"status": "success", "message": "自己紹介を保存しました"})
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route("/board")
-def board():
-    """掲示板ページを表示する"""
-    return render_template("board.html")
-
-@app.route("/api/intros")
-def get_intros():
-    """保存された自己紹介データをJSONで提供する"""
-    try:
-        with open(SAVE_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError):
-        data = []
-    return jsonify(data)
-
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')

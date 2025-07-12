@@ -2,19 +2,15 @@
 ```
 📂 project-root/
 ┣ーー 📂 myvenv -------- 仮想環境(後述するコマンドを実行して作成)
-┣ーー 📂 static/
-┃ ┣ー 📂 images/ ---------- 画像フォルダ
-┃ ┣ー 📜 style.css ---------- cssファイル
-┃ ┣ー 📜 board.js ---------- JavaScriptファイル(掲示板部分)
-┃ ┗ー 📜 main.js ---------- JavaScriptファイル(自己紹介生成部分)
+┣ーー 📂 static/ 
+┃ ┗ー 📜 style.css ---------- cssファイル 
+┃ ┗ー 📜 main.js ---------- JavaScriptファイル
 ┣ーー📂 templates/
-┃ ┣ー 📜 board.html ---------- フロント部分, (掲示板)
-┃ ┗ー 📜 index.html ---------- フロント部分, (メイン)
+┃ ┗ー 📜 index.html ---------- フロント部分
 ┣ーー📜 .env ---------- 環境変数を入れている(要gitignore)
 ┣ーー📜 .gitignore
 ┣ーー📜 app.py ----------- バック部分(PythonのFlaskを使用)
 ┣ーー📜 README.md
-┣ーー📜 saved_intro.json ------------- 生成した自己紹介をjson形式で保存(要gitignore)
 ┗ーー📜 requirements.txt----------- pythonのパッケージ管理
 ```
 
@@ -25,7 +21,7 @@
 GEMINI_API_KEY="（自分のAPIキー）"
 ```
 
-### 3. pythonの仮想環境の構築
+# pythonの仮想環境の構築
 Windows版を想定
 
 myvenvというPythonの仮想環境を構築
@@ -43,13 +39,9 @@ python -m venv myvenv
 pip install -r requirements.txt
 ```
 
-### 4. 立ち上げ
+立ち上げ
 ```{copy=True}
 python app.py
 ```
 
 # 動作
-
-## トップページ
-
-## 掲示板

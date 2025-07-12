@@ -98,3 +98,25 @@ label {
     width: 100%; /* 1行に1つ表示 */
   }
 }
+
+/* ... 既存のスタイル ... */
+
+/* リアクション機能のスタイル */
+.reaction-footer {
+  background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
+}
+
+.reaction-btn {
+  transition: all 0.2s ease-in-out;
+}
+
+.reaction-btn:hover {
+  transform: scale(1.1);
+}
+
+.reaction-display {
+  font-size: 0.9rem;
+  color: #78b1e3;
+  padding: 0.25rem 0.5rem;
+}
