@@ -9,7 +9,7 @@
         <a href="{{ url_for('create') }}" class="btn btn-primary">自己紹介を作る</a>
     </div>
 
-    <div id="user-info" data-logged-in="{{ current_user.is_authenticated | lower }}"></div>
+    <div id="user-info" data-logged-in="{{ logged_in }}" data-username="{{ username or '' }}"></div>
 
     <div id="intros-container">
         <p id="loading-message">読み込み中...</p>
