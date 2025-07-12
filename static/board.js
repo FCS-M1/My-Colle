@@ -1,8 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("intros-container");
     const loadingMessage = document.getElementById("loading-message");
+    
+    // ★ ログイン状態とユーザー情報を取得
     const userInfoDiv = document.getElementById("user-info");
     const IS_LOGGED_IN = userInfoDiv.getAttribute('data-logged-in').toLowerCase() === 'true';
+    const CURRENT_USER = userInfoDiv.getAttribute('data-username');
 
     if (!container || !loadingMessage) return;
 
@@ -35,6 +38,19 @@ document.addEventListener("DOMContentLoaded", () => {
         card.className = 'card mb-3';
         card.dataset.introId = intro.id;
 
+        // ↓↓↓ ここから4行の console.log を追加 ↓↓↓
+        console.log(`--- カードID: ${intro.id} のチェック ---`);
+        console.log('ログイン状態 (IS_LOGGED_IN):', IS_LOGGED_IN);
+        console.log('ログイン中のユーザー (CURRENT_USER):', CURRENT_USER);
+        console.log('この投稿の作者 (intro.author):', intro.author);
+        // ↑↑↑ ここまで4行の console.log を追加 ↑↑↑
+
+        // ★ 自己紹介削除ボタンを条件付きで生成
+        const deleteIntroButtonHTML = (IS_LOGGED_IN && CURRENT_USER === intro.author)
+            ? `<button class="btn btn-sm btn-outline-danger delete-btn">削除</button>`
+            : '';
+
+        // ★ コメントフォームを条件付きで生成
         const commentFormHTML = IS_LOGGED_IN ? `
             <form class="comment-form mt-2">
                 <div class="input-group">
@@ -44,12 +60,12 @@ document.addEventListener("DOMContentLoaded", () => {
             </form>
         ` : '';
         
-        //  BootstrapのCollapseを制御するためのユニークなIDを生成
         const collapseId = `comments-collapse-${intro.id}`;
 
         card.innerHTML = `
-            <div class="card-header">
-                投稿者: ${escapeHTML(intro.author)}
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>投稿者: ${escapeHTML(intro.author)}</span>
+                ${deleteIntroButtonHTML}
             </div>
             <div class="card-body">
                 <h5 class="card-title">${escapeHTML(intro.name)}さんの自己紹介</h5>
@@ -64,8 +80,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="collapse mt-2" id="${collapseId}">
                     <div class="comments-container">
                     </div>
+                    ${commentFormHTML}
                 </div>
-                ${commentFormHTML}
             </div>
         `;
 
@@ -73,13 +89,13 @@ document.addEventListener("DOMContentLoaded", () => {
         updateReactions(reactionFooter, intro.id, intro.reactions || {});
         
         const commentsContainer = card.querySelector('.comments-container');
-        renderComments(commentsContainer, intro.comments || []);
+        renderComments(commentsContainer, intro.id, intro.comments || []);
         
         return card;
     }
     
     // --- リプライ表示を更新する関数 ---
-    function renderComments(container, comments) {
+    function renderComments(container, introId, comments) {
         container.innerHTML = '';
         if (comments.length === 0) {
             container.innerHTML = '<p class="text-muted small mb-0">まだリプライはありません。</p>';
@@ -92,9 +108,16 @@ document.addEventListener("DOMContentLoaded", () => {
         comments.slice().reverse().forEach(comment => {
             const item = document.createElement('div');
             item.className = 'list-group-item px-0 py-1';
+            
+            // ★ コメント削除ボタンを条件付きで生成
+            const deleteCommentButtonHTML = (IS_LOGGED_IN && CURRENT_USER === comment.author)
+                ? `<button class="btn btn-sm btn-link text-danger p-0 ms-2 delete-comment-btn" data-comment-id="${comment.id}" data-intro-id="${introId}">削除</button>`
+                : '';
+
             item.innerHTML = `
                 <div class="d-flex w-100 justify-content-between">
                     <p class="mb-1 comment-text">${escapeHTML(comment.text)}</p>
+                    ${deleteCommentButtonHTML}
                 </div>
                 <small class="text-muted">by ${escapeHTML(comment.author)}</small>
             `;
@@ -106,14 +129,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- リアクション部分の更新関数 ---
     function updateReactions(footerElement, introId, reactions) {
-        const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '😍'];
-      
+        const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢'];
+    
         let reactionsHTML = '<div class="d-flex align-items-center gap-2">';
 
         REACTION_OPTIONS.forEach(emoji => {
             const userList = reactions[emoji] || [];
             const count = userList.length;
-            const userHasReacted = IS_LOGGED_IN && userList.includes("{{ current_user.username }}");
+            const userHasReacted = IS_LOGGED_IN && userList.includes(CURRENT_USER);
             const buttonClass = userHasReacted ? 'btn-primary' : 'btn-outline-secondary';
 
             if (IS_LOGGED_IN) {
@@ -135,9 +158,19 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // --- イベントリスナー（イベント委任） ---
     container.addEventListener('click', function(event) {
-        const target = event.target.closest('.reaction-btn');
-        if (target) {
-            handleReactionClick(target);
+        const reactionTarget = event.target.closest('.reaction-btn');
+        if (reactionTarget) {
+            handleReactionClick(reactionTarget);
+        }
+
+        const deleteIntroTarget = event.target.closest('.delete-btn');
+        if (deleteIntroTarget) {
+            handleDeleteClick(deleteIntroTarget);
+        }
+
+        const deleteCommentTarget = event.target.closest('.delete-comment-btn');
+        if (deleteCommentTarget) {
+            handleCommentDeleteClick(deleteCommentTarget);
         }
     });
 
@@ -181,6 +214,45 @@ document.addEventListener("DOMContentLoaded", () => {
             alert(error.message);
         }
     }
+    
+    // --- 自己紹介削除クリック処理 ---
+    async function handleDeleteClick(button) {
+        const card = button.closest('.card');
+        const introId = card.dataset.introId;
+
+        if (!confirm("この自己紹介を本当に削除しますか？")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/delete_intro/${introId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                alert("削除する権限がありません。");
+                return;
+            }
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || '削除に失敗しました。');
+            }
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                card.style.transition = 'opacity 0.5s ease';
+                card.style.opacity = '0';
+                setTimeout(() => card.remove(), 500);
+            } else {
+                throw new Error(result.message || '削除に失敗しました。');
+            }
+
+        } catch (error) {
+            console.error('削除処理中にエラー:', error);
+            alert(error.message);
+        }
+    }
 
     // --- リプライ送信処理 ---
     async function handleCommentSubmit(form) {
@@ -191,7 +263,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!commentText) return;
 
-        // 🔒 ボタンを無効化（送信中）
         submitButton.disabled = true;
 
         try {
@@ -215,11 +286,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const commentsContainer = cardToUpdate.querySelector('.comments-container');
                 const commentsCountSpan = cardToUpdate.querySelector('.comments-count');
 
-                renderComments(commentsContainer, result.comments);
+                renderComments(commentsContainer, introId, result.comments);
                 commentsCountSpan.textContent = result.comments.length;
                 input.value = '';
 
-                // コメント欄を開く
                 const collapseElement = cardToUpdate.querySelector('.collapse');
                 if (collapseElement && !collapseElement.classList.contains('show')) {
                     const bsCollapse = new bootstrap.Collapse(collapseElement);
@@ -230,9 +300,50 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error(error);
             alert(error.message);
         } finally {
-            setTimeout(() => {
-                submitButton.disabled = false;
-            }, 1000 * 60);
+            submitButton.disabled = false;
+        }
+    }
+
+    // --- リプライ削除処理 ---
+    async function handleCommentDeleteClick(button) {
+        const introId = button.dataset.introId;
+        const commentId = button.dataset.commentId;
+
+        if (!confirm("このリプライを本当に削除しますか？")) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/delete_comment/${introId}/${commentId}`, {
+                method: 'DELETE',
+            });
+
+            if (response.status === 401 || response.status === 403) {
+                alert("削除する権限がありません。");
+                return;
+            }
+            if (!response.ok) {
+                throw new Error('リプライの削除に失敗しました。');
+            }
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                const card = container.querySelector(`.card[data-intro-id="${introId}"]`);
+                if (card) {
+                    const commentsContainer = card.querySelector('.comments-container');
+                    const commentsCountSpan = card.querySelector('.comments-count');
+
+                    renderComments(commentsContainer, introId, result.comments);
+                    commentsCountSpan.textContent = result.comments.length;
+                }
+            } else {
+                throw new Error(result.message || '削除に失敗しました。');
+            }
+
+        } catch (error) {
+            console.error('リプライ削除処理中にエラー:', error);
+            alert(error.message);
         }
     }
 });

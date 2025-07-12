@@ -112,8 +112,13 @@ def create():
 
 @app.route("/board")
 def board():
-    # ★ ログイン状態をテンプレートに渡す
-    return render_template("board.html", logged_in=current_user.is_authenticated)
+    # ★ ログイン状態とユーザー名をテンプレートに渡す
+    username = current_user.username if current_user.is_authenticated else ""
+    return render_template(
+        "board.html",
+        logged_in=current_user.is_authenticated,
+        username=username
+    )
 
 @app.route("/local_save", methods=["POST"])
 @login_required
@@ -237,6 +242,30 @@ def generate_intro():
     response = model.generate_content(prompt)
     return jsonify({"introduction": response.text.strip()})
 
+@app.route("/delete_intro/<intro_id>", methods=["DELETE"])
+@login_required
+def delete_intro(intro_id):
+    intros = read_json(INTRO_FILE)
+    
+    # 削除対象の投稿をIDで探す
+    target_intro = next((item for item in intros if item.get('id') == intro_id), None)
+
+    # 投稿が見つからない場合
+    if not target_intro:
+        return jsonify({"status": "error", "message": "投稿が見つかりません"}), 404
+
+    # 投稿者本人かチェック (非常に重要)
+    if target_intro.get('author') != current_user.username:
+        return jsonify({"status": "error", "message": "削除する権限がありません"}), 403
+
+    # リストから該当する投稿を削除
+    updated_intros = [item for item in intros if item.get('id') != intro_id]
+    
+    # ファイルに書き戻す
+    write_json(INTRO_FILE, updated_intros)
+
+    return jsonify({"status": "success", "message": "削除しました"})
+
 # --- ★ リプライ投稿機能のAPI ---
 @app.route("/comment/<intro_id>", methods=["POST"])
 @login_required
@@ -268,6 +297,33 @@ def add_comment(intro_id):
     write_json(INTRO_FILE, intros)
     
     # 更新されたコメントリストをクライアントに返す
+    return jsonify({"status": "success", "comments": target_intro["comments"]})
+
+@app.route("/delete_comment/<intro_id>/<comment_id>", methods=["DELETE"])
+@login_required
+def delete_comment(intro_id, comment_id):
+    intros = read_json(INTRO_FILE)
+    target_intro = next((item for item in intros if item.get('id') == intro_id), None)
+
+    if not target_intro:
+        return jsonify({"status": "error", "message": "投稿が見つかりません"}), 404
+    
+    comments = target_intro.get("comments", [])
+    target_comment = next((c for c in comments if c.get('id') == comment_id), None)
+
+    if not target_comment:
+        return jsonify({"status": "error", "message": "コメントが見つかりません"}), 404
+
+    # コメント投稿者本人かチェック
+    if target_comment.get('author') != current_user.username:
+        return jsonify({"status": "error", "message": "削除する権限がありません"}), 403
+
+    # コメントをリストから削除
+    target_intro["comments"] = [c for c in comments if c.get('id') != comment_id]
+    
+    write_json(INTRO_FILE, intros)
+
+    # 更新後のコメントリストを返す
     return jsonify({"status": "success", "comments": target_intro["comments"]})
 
 if __name__ == "__main__":
