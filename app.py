@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv
 import json
 import uuid
+import datetime
 
 load_dotenv()
 
@@ -128,7 +129,8 @@ def local_save():
         "author": current_user.username,
         "name": name_in_intro,
         "intro": intro_text,
-        "reactions": {} # リアクション用のキーを追加
+        "reactions": {}, # リアクション用のキーを追加
+        "comments":[],
     }
     
     try:
@@ -231,6 +233,38 @@ def generate_intro():
     response = model.generate_content(prompt)
     return jsonify({"introduction": response.text.strip()})
 
+# --- ★ リプライ投稿機能のAPI ---
+@app.route("/comment/<intro_id>", methods=["POST"])
+@login_required
+def add_comment(intro_id):
+    data = request.get_json()
+    comment_text = data.get("text")
+
+    if not comment_text or not comment_text.strip():
+        return jsonify({"status": "error", "message": "コメント内容がありません"}), 400
+
+    intros = read_json(INTRO_FILE)
+    target_intro = next((item for item in intros if item.get('id') == intro_id), None)
+
+    if not target_intro:
+        return jsonify({"status": "error", "message": "投稿が見つかりません"}), 404
+
+    if "comments" not in target_intro:
+        target_intro["comments"] = []
+
+    new_comment = {
+        "id": str(uuid.uuid4()),
+        "author": current_user.username,
+        "text": comment_text,
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat() # 投稿時刻をISO形式で保存
+    }
+    
+    target_intro["comments"].append(new_comment)
+    
+    write_json(INTRO_FILE, intros)
+    
+    # 更新されたコメントリストをクライアントに返す
+    return jsonify({"status": "success", "comments": target_intro["comments"]})
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')

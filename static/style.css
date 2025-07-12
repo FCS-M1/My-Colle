@@ -12,6 +12,14 @@
   font-style: normal;
 }
 
+/* リアクション機能のスタイル */
+.reaction-footer {
+  background-color: #f8f9fa;
+  padding: 0.5rem 1rem;
+  /* ★ コメントセクションとの区切り線を追加 */
+  border-bottom: 1px solid #dee2e6;
+}
+
 h1 {
   text-align: center;
   color: white; /* ボックス内の文字色 */
@@ -157,4 +165,28 @@ label {
   font-size: 0.9rem;
   color: #78b1e3;
   padding: 0.25rem 0.5rem;
+}
+
+.comments-footer {
+  background-color: #f8f9fa;
+  padding: 0.75rem 1rem;
+}
+
+.comments-container .list-group-item {
+  background-color: transparent; /* 親要素の背景色を継承 */
+  border: none; /* ボーダーを削除 */
+}
+
+.comment-text {
+  font-size: 0.9rem;
+  word-break: break-all; /* 長いテキストがはみ出ないように折り返す */
+}
+
+.comment-form .form-control {
+  border-right: 0;
+}
+
+.comment-form .btn {
+  /* 入力欄とボタンの間の線を合わせる */
+  border-color: #ced4da;
 }
