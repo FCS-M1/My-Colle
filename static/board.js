@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("intros-container");
     const loadingMessage = document.getElementById("loading-message");
-    // ★ ログイン状態とユーザー情報を取得
     const userInfoDiv = document.getElementById("user-info");
     const IS_LOGGED_IN = userInfoDiv.getAttribute('data-logged-in').toLowerCase() === 'true';
 
@@ -36,7 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
         card.className = 'card mb-3';
         card.dataset.introId = intro.id;
 
-        // ★ ログインしている場合のみリプライフォームを表示
         const commentFormHTML = IS_LOGGED_IN ? `
             <form class="comment-form mt-2">
                 <div class="input-group">
@@ -45,6 +43,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
             </form>
         ` : '';
+        
+        // ★ BootstrapのCollapseを制御するためのユニークなIDを生成
+        const collapseId = `comments-collapse-${intro.id}`;
 
         card.innerHTML = `
             <div class="card-header">
@@ -55,28 +56,31 @@ document.addEventListener("DOMContentLoaded", () => {
                 <p class="card-text" style="white-space: pre-wrap;">${escapeHTML(intro.intro)}</p>
             </div>
             <div class="card-footer reaction-footer">
-                </div>
+            </div>
             <div class="card-footer comments-footer">
-                <div class="comments-container">
+                <button class="btn btn-link btn-sm p-0 text-decoration-none" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}">
+                    コメント (<span class="comments-count">${intro.comments ? intro.comments.length : 0}</span>)
+                </button>
+                <div class="collapse mt-2" id="${collapseId}">
+                    <div class="comments-container">
                     </div>
+                </div>
                 ${commentFormHTML}
             </div>
         `;
 
-        // リアクション部分を生成
         const reactionFooter = card.querySelector('.reaction-footer');
         updateReactions(reactionFooter, intro.id, intro.reactions || {});
         
-        // ★ コメント部分を生成
         const commentsContainer = card.querySelector('.comments-container');
         renderComments(commentsContainer, intro.comments || []);
-
+        
         return card;
     }
     
-    // --- ★ リプライ表示を更新する関数 ---
+    // --- リプライ表示を更新する関数 ---
     function renderComments(container, comments) {
-        container.innerHTML = ''; // コンテナをクリア
+        container.innerHTML = '';
         if (comments.length === 0) {
             container.innerHTML = '<p class="text-muted small mb-0">まだリプライはありません。</p>';
             return;
@@ -85,7 +89,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const list = document.createElement('div');
         list.className = 'list-group list-group-flush';
         
-        // 新しいコメントが上に来るように逆順で表示
         comments.slice().reverse().forEach(comment => {
             const item = document.createElement('div');
             item.className = 'list-group-item px-0 py-1';
@@ -138,11 +141,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // ★ リプライフォーム送信のイベントリスナーを追加
     container.addEventListener('submit', function(event) {
         const form = event.target.closest('.comment-form');
         if (form) {
-            event.preventDefault(); // ページの再読み込みを防止
+            event.preventDefault();
             handleCommentSubmit(form);
         }
     });
@@ -155,9 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(`/react/${introId}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ reaction: emoji }),
             });
 
@@ -166,9 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "/login";
                 return;
             }
-            if (!response.ok) {
-                throw new Error('リアクションに失敗しました。');
-            }
+            if (!response.ok) throw new Error('リアクションに失敗しました。');
 
             const result = await response.json();
             
@@ -184,13 +182,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // --- ★ リプライ送信処理 ---
+    // --- リプライ送信処理 ---
     async function handleCommentSubmit(form) {
         const introId = form.closest('.card').dataset.introId;
         const input = form.querySelector('input[type="text"]');
         const commentText = input.value.trim();
 
-        if (!commentText) return; // 空のコメントは送信しない
+        if (!commentText) return;
 
         try {
             const response = await fetch(`/comment/${introId}`, {
@@ -204,18 +202,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "/login";
                 return;
             }
-            if (!response.ok) {
-                throw new Error('リプライの投稿に失敗しました。');
-            }
+            if (!response.ok) throw new Error('リプライの投稿に失敗しました。');
 
             const result = await response.json();
             
-            // 対応するカードのコメントセクションを更新
             const cardToUpdate = container.querySelector(`.card[data-intro-id="${introId}"]`);
             if (cardToUpdate) {
                 const commentsContainer = cardToUpdate.querySelector('.comments-container');
+                const commentsCountSpan = cardToUpdate.querySelector('.comments-count');
+                
                 renderComments(commentsContainer, result.comments);
-                input.value = ''; // 送信後に入力欄をクリア
+                // ★ コメント数を更新
+                commentsCountSpan.textContent = result.comments.length;
+                input.value = '';
+
+                // ★ 投稿後、コメント欄を開く
+                const collapseElement = cardToUpdate.querySelector('.collapse');
+                if (collapseElement && !collapseElement.classList.contains('show')) {
+                    const bsCollapse = new bootstrap.Collapse(collapseElement);
+                    bsCollapse.show();
+                }
             }
 
         } catch (error) {

@@ -3,19 +3,20 @@
 {% block title %}みんなの自己紹介{% endblock %}
 
 {% block content %}
-  <h1 class="mb-4">みんなの自己紹介</h1>
-  
-  <div id="intros-container">
-    <p id="loading-message" class="text-center">読み込み中...</p>
-  </div>
-  
-  <div class="text-center mt-4">
-    <a href="{{ url_for('create') }}" class="btn btn-secondary">自己紹介を新しく作る</a>
-  </div>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>みんなの自己紹介</h2>
+        <a href="{{ url_for('create') }}" class="btn btn-primary">自己紹介を作る</a>
+    </div>
 
-  <div id="user-info" data-logged-in="{{ logged_in }}"></div>
+    <div id="user-info" data-logged-in="{{ current_user.is_authenticated | lower }}"></div>
+
+    <div id="intros-container">
+        <p id="loading-message">読み込み中...</p>
+        </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
-  <script src="{{ url_for('static', filename='board.js') }}"></script>
+<script src="{{ url_for('static', filename='board.js') }}"></script>
 {% endblock %}
