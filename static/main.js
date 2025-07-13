@@ -4,6 +4,8 @@ let currentStep = 1;
 let questionCount = 1;
 let userName = "";
 let questions = [];
+let savedAnswers = null;
+let savedStyle = "";
 
 // ===== DOMContentLoaded =====
 document.addEventListener("DOMContentLoaded", () => {
@@ -32,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setupCopyButton();
         setupRestartButton();
         setupSaveButton();
+        setupRegenButton();
     }
 });
 
@@ -208,6 +211,9 @@ async function handleIntroGenerate(e) {
     let input = document.getElementById("style-choice").value.trim();
     const style = input.replace(/[「」()（）＜＞〈〉【】\\]/g, '');
 
+    savedAnswers = allAnswers;
+    savedStyle = style;
+
     // スピナー表示
     toggleOnly("intro-loading-spinner");
 
@@ -230,6 +236,32 @@ async function handleIntroGenerate(e) {
     }
 }
 
+async function regenerateIntro() {
+    if (!savedAnswers || !savedStyle || !userName) {
+        alert("再生成に必要な情報がありません");
+        return;
+    }
+
+    toggleOnly("intro-loading-spinner");
+
+    try {
+        const res = await fetch("/generate_intro", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ answers: savedAnswers, style: savedStyle, name: userName })
+        });
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
+        const introTextEl = document.getElementById("intro-text");
+        if (introTextEl) {
+            introTextEl.innerText = data.introduction;
+        }
+        toggleOnly("result");
+    } catch (err) {
+        alert("自己紹介の再生成に失敗しました。");
+        toggleOnly("result");
+    }
+}
 
 // ===== その他機能 =====
 async function generate_question() {
@@ -343,4 +375,10 @@ function setupRestartButton() {
         // 最初からやり直すので、作成ページにリロード
         window.location.href = "/create";
     });
+}
+
+function setupRegenButton() {
+    const regenBtn = document.getElementById("regen-intro-btn");
+    if (!regenBtn) return;
+    regenBtn.addEventListener("click", regenerateIntro);
 }
