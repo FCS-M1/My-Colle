@@ -129,9 +129,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- リアクション部分の更新関数 ---
     function updateReactions(footerElement, introId, reactions) {
-        const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢'];
+        const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🗿'];
     
-        let reactionsHTML = '<div class="d-flex align-items-center gap-2">';
+        let reactionsHTML = '<div class="d-flex align-items-center flex-nowrap flex-md-wrap gap-2">';
 
         REACTION_OPTIONS.forEach(emoji => {
             const userList = reactions[emoji] || [];
@@ -141,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (IS_LOGGED_IN) {
                 reactionsHTML += `
-                    <button class="btn btn-sm reaction-btn ${buttonClass}" data-emoji="${emoji}" data-intro-id="${introId}">
+                    <button class="btn reaction-btn ${buttonClass}" data-emoji="${emoji}" data-intro-id="${introId}">
                         ${emoji} <span class="badge bg-light text-dark">${count}</span>
                     </button>
                 `;

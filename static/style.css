@@ -144,6 +144,12 @@ label {
   margin-bottom: 15px; /* 下方向の余白（flex-wrap時の区切り） */
 }
 
+.reaction-btn .badge {
+  font-size: 0.9rem;      /* フォントサイズを大きくする */
+  font-weight: 600;       /* 少し太字にする */
+  vertical-align: middle; /* 絵文字との縦方向の位置を中央に揃える */
+}
+
 /* 小さな画面幅の場合の調整 */
 @media (max-width: 768px) {
   #intros-container .card {
@@ -195,4 +201,30 @@ label {
 .comment-form .btn {
   /* 入力欄とボタンの間の線を合わせる */
   border-color: #ced4da;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 1.5rem; /* 見出しのフォントサイズを少し小さくする */
+    padding: 10px;   /* 内側の余白を少し狭くする */
+    text-shadow: 1px 1px 2px black, -1px -1px 2px black; /* 影を少し弱くする */
+  }
+
+  #intros-container .card {
+    width: 100%; /* 1行に1つ表示 */
+  }
+
+  .reaction-footer .d-flex {
+    gap: 0.25rem !important; /* ボタン間の隙間を狭くする */
+  }
+
+  .reaction-btn {
+    padding: 0.2rem 0.2rem; /* 内側余白を狭くする */
+    font-size: 0.875rem;    /* 文字サイズを小さくする */
+  }
+
+  /* 小さいボタンに合わせてバッジのフォントも調整 */
+  .reaction-btn .badge {
+    font-size: 0.75rem;
+  }
 }
