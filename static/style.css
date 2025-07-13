@@ -37,16 +37,23 @@ h1 {
   background-color: #1A1A2E; /* 内側の背景色（深い紺） */
 background-image: 
     /* 点（星）のスタイルをここに並べる */
-    radial-gradient(circle at 10% 20%, #E0E0E0 1px, transparent 1px),  /* 1つ目の点 */
-    radial-gradient(circle at 80% 40%, #E0E0E0 1px, transparent 1px),  /* 2つ目の点 */
-    /*radial-gradient(circle at 10% 70%, #E0E0E0 1px, transparent 1px),  /* 3つ目の点 */
-    radial-gradient(circle at 90% 35%, #E0E0E0 1px, transparent 1px),  /* 4つ目の点 */
-    radial-gradient(circle at 75% 15%, #E0E0E0 1px, transparent 1px),  /* 5つ目の点 */
-    radial-gradient(circle at 20% 10%, #E0E0E0 1px, transparent 1px),  /* 1つ目の点 */
-    /*radial-gradient(circle at  5% 50%, #E0E0E0 1px, transparent 1px),  /* 2つ目の点 */
-    radial-gradient(circle at 13% 90%, #E0E0E0 1px, transparent 1px),  /* 3つ目の点 */
-    radial-gradient(circle at 95% 10%, #E0E0E0 1px, transparent 1px),  /* 4つ目の点 */
-    radial-gradient(circle at 85% 20%, #E0E0E0 1px, transparent 1px),  /* 5つ目の点 */
+    /*夏の大三角*/
+    radial-gradient(circle at 10% 20%, #E0E0E0 1.5px, transparent 1px),  
+    radial-gradient(circle at 20% 10%, #E0E0E0 1px, transparent 1px),  
+    radial-gradient(circle at 95% 10%, #E0E0E0 1px, transparent 1px),  
+    /*W座*/
+    radial-gradient(circle at 80% 40%, #E0E0E0 1px, transparent 1px),  
+    radial-gradient(circle at 90% 35%, #E0E0E0 1px, transparent 1px),  
+    radial-gradient(circle at 75% 15%, #E0E0E0 1px, transparent 1px), 
+    radial-gradient(circle at 13% 90%, #E0E0E0 1px, transparent 1px), 
+    radial-gradient(circle at 85% 20%, #E0E0E0 1px, transparent 1px), 
+    /*北斗七星の一部*/
+    radial-gradient(circle at 68% 65%, #E0E0E0 1.3px, transparent 1px),  
+    radial-gradient(circle at 59% 75%, #E0E0E0 1px, transparent 1px),  
+    radial-gradient(circle at 53% 85%, #E0E0E0 1px, transparent 1px),  
+    radial-gradient(circle at 48% 98%, #E0E0E0 1px, transparent 1px),  
+    radial-gradient(circle at 46% 86%, #E0E0E0 1px, transparent 1px),  
+    radial-gradient(circle at 42% 95%, #E0E0E0 1.2px, transparent 1px),  
     /* ここに元の紫のグラデーションを置く */
     linear-gradient(160deg, #282843 0%, #2A0944 100%);
 
