@@ -129,7 +129,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // --- リアクション部分の更新関数 ---
     function updateReactions(footerElement, introId, reactions) {
-        const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🗿'];
+        const REACTION_OPTIONS = ['👍', '❤️', '😂', '😮', '😢', '🤥', '🗿'];
     
         let reactionsHTML = '<div class="d-flex align-items-center flex-nowrap flex-md-wrap gap-2">';
 
