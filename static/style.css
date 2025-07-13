@@ -150,15 +150,6 @@ label {
   vertical-align: middle; /* 絵文字との縦方向の位置を中央に揃える */
 }
 
-/* 小さな画面幅の場合の調整 */
-@media (max-width: 768px) {
-  #intros-container .card {
-    width: 100%; /* 1行に1つ表示 */
-  }
-}
-
-/* ... 既存のスタイル ... */
-
 /* リアクション機能のスタイル */
 .reaction-footer {
   background-color: #f8f9fa;
