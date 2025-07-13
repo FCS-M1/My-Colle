@@ -244,12 +244,12 @@ def generate_intro():
     
     response = model.generate_content(prompt)
     text = response.text.strip()
-
-    # 最初と最後が「と」なら除去
-    if text.startswith("「") and text.endswith("」"):
+  
+    if text.startswith("「") and text.endswith("」") and text.count("「") == 1 and text.count("」") == 1:
         text = text[1:-1].strip()
 
     return jsonify({"introduction": text})
+
 
 @app.route("/delete_intro/<intro_id>", methods=["DELETE"])
 @login_required
