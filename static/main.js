@@ -6,7 +6,6 @@ let userName = "";
 let questions = [];
 let savedAnswers = null;
 let savedStyle = "";
-let generatedQuestions = []; // 過去に生成された質問をここに保存
 
 // ===== DOMContentLoaded =====
 document.addEventListener("DOMContentLoaded", () => {
