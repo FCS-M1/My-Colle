@@ -89,7 +89,13 @@ function setupNameForm() {
         e.preventDefault();
         let input = document.getElementById("name-input").value.trim();
         userName = input.replace(/[「」()（）＜＞〈〉【】]/g, '');
-        if (!userName) return;
+        if (!userName) {
+            alert("有効な名前を入力してください。")
+            return;
+        } else if(userName.length > 200) {
+            alert("長すぎます！申し訳ありませんが一部を使用するか、あだ名を入力してください！")
+            return;
+        }
         updateProgress(2);
         toggleOnly("step2");
     });
@@ -199,7 +205,8 @@ async function handleIntroGenerate(e) {
     const extraAnswers = Object.fromEntries(new FormData(e.target));
     Object.assign(allAnswers, extraAnswers);
 
-    const style = document.getElementById("style-choice").value.trim();
+    let input = document.getElementById("style-choice").value.trim();
+    const style = input.replace(/[「」()（）＜＞〈〉【】\\]/g, '');
 
     // スピナー表示
     toggleOnly("intro-loading-spinner");
