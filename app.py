@@ -197,8 +197,10 @@ def get_intros():
 # --- (AI関連のAPIは変更なし) ---
 @app.route("/suggest_question", methods=["POST"])
 def suggest_question():
-    prompt = "自己紹介でよく使われる面白い質問を1つだけ、日本語で提案してください。\n"
+    prompt = "「魔法を1つ使えるとしたらどのような魔法がいい？」「好きな寿司ネタは？」「今まで後悔した一番大きな決断は？」のように"
+    prompt += "個人によって回答の変わる面白い質問を1つだけ、日本語で提案してください。\n"
     prompt += "質問は数字または単語で答えられるようなものにしてください。\n"
+    prompt += "テーマソング系はなしにしてください。\n"
     prompt += "その際に「了解」などの前置き・後書き・説明は一切不要です。\n"
     prompt += "出力は質問文のみ、余計なものは書かないでください。\n"
     response = model.generate_content(prompt)
@@ -235,13 +237,19 @@ def generate_intro():
         
     prompt += f"「{name}」がユーザ名です。\n"
     prompt += "「」内を改変することなくそのまま使用してください。\n"
-    prompt += "加えて, 出力に「了解」等の返答や補足や説明は一切不要で, 自己紹介文章のみを出力すること。\n"
+    prompt += "加えて, 出力に「了解」等の返答や補足や説明は一切不要で, 全体を括弧で括ることなく自己紹介文章のみを出力すること。\n"
     
     for q, a in answers.items():
         prompt += f"Q: {q}\nA: {a}\n"
     
     response = model.generate_content(prompt)
-    return jsonify({"introduction": response.text.strip()})
+    text = response.text.strip()
+
+    # 最初と最後が「と」なら除去
+    if text.startswith("「") and text.endswith("」"):
+        text = text[1:-1].strip()
+
+    return jsonify({"introduction": text})
 
 @app.route("/delete_intro/<intro_id>", methods=["DELETE"])
 @login_required
