@@ -139,16 +139,16 @@ label {
 
 /* 掲示板のスタイル */
 #intros-container {
-  display: flex;
-  flex-wrap: wrap; /* 画面幅が狭くなった場合に折り返す */
+  display: grid;
+  /* 画面幅に応じて列数を自動調整 */
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 20px; /* 各要素間の余白 */
 }
 
 #intros-container .card {
-  width: calc(50% - 10px); /* 1行に2つ並べるための幅 (左右のgapを考慮) */
   background-color: #e0f2f7; /* 淡い青色 */
   border: 1px solid #b2ebf2; /* より薄い青色のボーダー */
-  margin-bottom: 15px; /* 下方向の余白（flex-wrap時の区切り） */
+  /* widthとmargin-bottomの指定は不要になるため削除 */
 }
 
 .reaction-btn .badge {
