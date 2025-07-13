@@ -25,8 +25,8 @@
         </ul>
         <ul class="navbar-nav">
           {% if current_user.is_authenticated %}
-            <li class="nav-item">
-              <span class="navbar-text me-3">こんにちは, {{ current_user.username }}さん</span>
+            <li class="nav-item d-flex align-items-center">
+              <span class="navbar-text me-3">こんにちは {{ current_user.username }}さん</span>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a>
